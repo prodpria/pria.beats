@@ -1,0 +1,7 @@
+# Always check for the newest version of the store, so updates show right away
+/*
+  Cache-Control: no-cache
+
+# Beat previews can be cached briefly
+/beats/*.mp3
+  Cache-Control: public, max-age=300
