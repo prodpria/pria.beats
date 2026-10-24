@@ -1,0 +1,9 @@
+// Cloudflare config for the PRIA beat store (static site, no server code)
+{
+  "name": "pria-beats",
+  "compatibility_date": "2025-10-01",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "404-page"
+  }
+}
