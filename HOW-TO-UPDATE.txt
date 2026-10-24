@@ -1,5 +1,5 @@
 PRIA BEAT STORE - HOW TO UPDATE
-Store: https://prodpria.github.io/pria.beat.store/
+Store: https://priabeats.store  (also at https://prodpria.github.io/pria.beat.store/)
 Repo:  https://github.com/prodpria/pria.beat.store
 
 ADD A BEAT (VS Code)
@@ -29,3 +29,10 @@ ONE-TIME SETUP CHECK (makes the beat list work on every phone)
 - github.com repo > Settings > Pages > Source must be "GitHub Actions".
 - After each Sync, the Actions tab shows a green check when the site
   has finished updating.
+
+CLOUDFLARE PAGES (priabeats.store)
+Cloudflare watches the GitHub repo. Every Commit + Sync Changes in
+VS Code updates priabeats.store automatically (about 1 minute).
+Build command (already set in Cloudflare):
+node -e "const fs=require('fs');fs.writeFileSync('beats/list.json',JSON.stringify(fs.readdirSync('beats').filter(n=>/\.(mp3|wav|m4a|ogg)$/i.test(n)).sort()))"
+Build output directory: /

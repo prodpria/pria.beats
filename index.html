@@ -200,6 +200,7 @@ const STORE = {
   // Your GitHub repository, like "prodpria/pria.beat.store". On a github.io link this
   // is found automatically, so you only need it if you use your own domain.
   github: "",
+  homeRepo: "prodpria/pria.beat.store",   // used when previewing on your computer
   instagram: "@prodpria",
 
   leasePrice: 45,                       // every beat lease costs this
@@ -240,7 +241,7 @@ const DEAL = STORE.deal, MAX_CART = DEAL.count;
 STORE.contact = `Email: ${STORE.email}\nWeb: prodpria.com\nIG: ${STORE.instagram}\nExclusives, customs and questions.`;
 /* read the beats folder on GitHub and build the list from file names */
 function parseBeatName(name){
-  const base = decodeURIComponent(name).replace(/\.(mp3|wav|m4a|ogg)$/i, "").replace(/^\s*(\d+[.)]|0\d+)\s*-?\s*/, "");
+  const base = decodeURIComponent(name).normalize("NFC").replace(/\u266D/g, "b").replace(/\u266F/g, "#").replace(/\s*\.(mp3|wav|m4a|ogg)$/i, "").trim().replace(/^\s*(\d+[.)]|0\d+)\s*-?\s*/, "");
   const parts = base.split(/\s+-\s+|_-_/).map(t => t.trim()).filter(Boolean);
   const beat = { title: parts.shift() || base, bpm: 0, key: "", tags: "", sold: false };
   const tags = [];
@@ -263,17 +264,20 @@ const SITE_BASE = (() => {
   if (host && first && !/\.html?$/i.test(first)) return `${location.origin}/${first}/`;
   return new URL("./", location.href).href;
 })();
+// true when you're previewing on your own computer (no live site to read the beats from)
+const IS_LOCAL = location.protocol === "file:" || /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname);
 async function loadBeatsFolder(){
   let repo = (STORE.github || "").trim().replace(/^https?:\/\/github\.com\//, "").replace(/\/$/, "");
   const host = location.hostname.match(/^([^.]+)\.github\.io$/i);
   if (!repo && host){ const first = location.pathname.split("/").filter(Boolean)[0]; repo = host[1] + "/" + (first && !/\.html?$/i.test(first) ? first : host[0]); }
+  if (!repo && !host) repo = STORE.homeRepo || "";       // your own domain or local preview: GitHub repo as backup
   if (!repo) return;
   STORE.repo = repo;
   const cacheKey = "pria-beats:" + repo;
   let files = null;
   try { const c = JSON.parse(sessionStorage.getItem(cacheKey) || "null"); if (c && Date.now() - c.t < 30e3) files = c.files; } catch(e) {}
-  if (!files && host && !STORE.github){
-    // 1st choice: beats/list.json kept up to date by the GitHub Action (no limits, works on cell data)
+  if (!files && !IS_LOCAL && !STORE.github){
+    // 1st choice: beats/list.json, rebuilt on every deploy (GitHub Action or Cloudflare build). No limits, works on cell data.
     try {
       const res = await fetch(SITE_BASE + "beats/list.json?t=" + Date.now(), { cache: "no-store" });
       if (res.ok){ const names = await res.json(); if (Array.isArray(names) && names.length) files = names.map(n => ({ name: n })); }
@@ -288,7 +292,7 @@ async function loadBeatsFolder(){
   }
   if (!files.length) return;
   files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-  const onSameSite = !!host && !STORE.github;
+  const onSameSite = !IS_LOCAL && !STORE.github;          // live site (github.io or priabeats.store) serves its own beats
   const raw = n => `https://raw.githubusercontent.com/${repo}/main/beats/${encodeURIComponent(n)}`;
   const list = files.map(f => Object.assign(parseBeatName(f.name), {
     preview: onSameSite ? SITE_BASE + "beats/" + encodeURIComponent(f.name) : (f.url || raw(f.name)),
