@@ -9,7 +9,9 @@
   (function(){
     if (!/\.github\.io$/i.test(location.hostname)) return;
     var home = "https://priabeats.store/";
-    fetch(home + "site.webmanifest", { mode: "no-cors", cache: "no-store" }).then(function(){ location.replace(home); }).catch(function(){});
+    // only redirect if priabeats.store really is the PRIA store (not a parking page)
+    fetch(home + "site.webmanifest", { cache: "no-store" }).then(function(r){ return r.json(); })
+      .then(function(m){ if (m && m.name === "PRIA Beat Store") location.replace(home); }).catch(function(){});
   })();
 </script>
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -649,15 +651,15 @@ function wrap(text, font, maxW){
 function items(s){
   switch (s.id){
     case "main": return [
-      { label: "Browse Instrumentals", right: "›", go: () => push("beats") },
+      { label: "Browse beats", right: "›", go: () => push("beats") },
       { label: "Now playing", right: "›", go: () => push("now") },
       { label: "Your cart", right: cart.length ? `${cart.length}  ${fmt(cartTotal())}` : "›", go: () => push("cart") },
-      { label: "Shuffle a preview", go: () => { const i = Math.floor(Math.random() * BEATS.length); play(i); push("now"); } },
-      { label: "Licensing", right: "›", go: () => push("text", { title: "License info", body: STORE.licensing }) },
-      { label: "Contact", right: "›", go: () => push("text", { title: "Contact", body: STORE.contact }) },
-      { label: "www.prodpria.com", right: "›", go: () => openLink(STORE.website, "Opening prodpria.com") },
+      { label: "Play a random beat", go: () => { const i = Math.floor(Math.random() * BEATS.length); play(i); push("now"); } },
+      { label: "What a lease includes", right: "›", go: () => push("text", { title: "License info", body: STORE.licensing }) },
+      { label: "Contact PRIA", right: "›", go: () => push("text", { title: "Contact", body: STORE.contact }) },
+      { label: "Visit prodpria.com", right: "›", go: () => openLink(STORE.website, "Opening prodpria.com") },
       { label: "Terms & privacy", right: "›", go: () => openLegal("terms") },
-      { label: "Play Sygnal", right: "›", go: () => { gameReset(); push("game"); } }
+      { label: "Play Sygnal (game)", right: "›", go: () => { gameReset(); push("game"); } }
     ];
     case "beats": return BEATS.map((b, i) => ({ label: b.title, right: b.sold ? "sold" : inCart(i) ? "added" : b.bpm + "", go: () => push("beat", { i }) }));
     case "beat": {

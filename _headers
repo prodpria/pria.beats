@@ -2,6 +2,10 @@
 /*
   Cache-Control: no-cache
 
+# lets the old github.io link confirm the new site is live
+/site.webmanifest
+  Access-Control-Allow-Origin: *
+
 # Beat previews can be cached briefly
 /beats/*.mp3
   Cache-Control: public, max-age=300
