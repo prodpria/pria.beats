@@ -124,11 +124,11 @@ header > *{pointer-events:auto}
   <div class="brand"><img id="brandLogo" alt="PRIA"><span>Beat store</span></div>
   <div class="actions">
     <button id="themeBtn" type="button" aria-pressed="false"><span>Dark</span></button>
-    <button id="lockBtn" type="button"><i></i><span>Use the player</span></button>
+    <button id="lockBtn" type="button"><i></i><span>Lock in</span></button>
   </div>
 </header>
 
-<p id="hint">Tap the player to start browsing beats.</p>
+<p id="hint">Tap the pod to lock in. Drag to spin it.</p>
 
 <section id="card" aria-live="polite">
   <button id="cardPlay" type="button" aria-label="Play preview"></button>
@@ -651,22 +651,22 @@ function wrap(text, font, maxW){
 function items(s){
   switch (s.id){
     case "main": return [
-      { label: "Browse beats", right: "›", go: () => push("beats") },
+      { label: "Instrumentals", right: "›", go: () => push("beats") },
       { label: "Now playing", right: "›", go: () => push("now") },
-      { label: "Your cart", right: cart.length ? `${cart.length}  ${fmt(cartTotal())}` : "›", go: () => push("cart") },
-      { label: "Play a random beat", go: () => { const i = Math.floor(Math.random() * BEATS.length); play(i); push("now"); } },
-      { label: "What a lease includes", right: "›", go: () => push("text", { title: "License info", body: STORE.licensing }) },
-      { label: "Contact PRIA", right: "›", go: () => push("text", { title: "Contact", body: STORE.contact }) },
-      { label: "Visit prodpria.com", right: "›", go: () => openLink(STORE.website, "Opening prodpria.com") },
+      { label: "Cart", right: cart.length ? `${cart.length}  ${fmt(cartTotal())}` : "›", go: () => push("cart") },
+      { label: "Shuffle a preview", go: () => { const i = Math.floor(Math.random() * BEATS.length); play(i); push("now"); } },
+      { label: "Licensing", right: "›", go: () => push("text", { title: "Licensing", body: STORE.licensing }) },
+      { label: "Contact", right: "›", go: () => push("text", { title: "Contact", body: STORE.contact }) },
+      { label: "www.prodpria.com", right: "›", go: () => openLink(STORE.website, "Opening prodpria.com") },
       { label: "Terms & privacy", right: "›", go: () => openLegal("terms") },
-      { label: "Play Sygnal (game)", right: "›", go: () => { gameReset(); push("game"); } }
+      { label: "Sygnal", right: "play", go: () => { gameReset(); push("game"); } }
     ];
     case "beats": return BEATS.map((b, i) => ({ label: b.title, right: b.sold ? "sold" : inCart(i) ? "added" : b.bpm + "", go: () => push("beat", { i }) }));
     case "beat": {
       const b = BEATS[s.i];
       const rows = [{ label: audio.playing === s.i ? "Stop preview" : "Play preview", go: () => toggle(s.i) }];
-      rows.push({ label: inCart(s.i) ? "Remove from cart" : "Buy lease (add to cart)", right: b.sold ? "sold" : fmt(STORE.leasePrice), go: () => toggleCart(s.i) });
-      rows.push({ label: "Exclusive rights", right: b.sold ? "sold" : "make offer", go: () => askExclusive(s.i) });
+      rows.push({ label: inCart(s.i) ? "Remove from cart" : "Add lease to cart", right: b.sold ? "sold" : fmt(STORE.leasePrice), go: () => toggleCart(s.i) });
+      rows.push({ label: "Exclusive", right: b.sold ? "sold" : "contact", go: () => askExclusive(s.i) });
       if (cart.length) rows.push({ label: `Cart (${cart.length})`, right: fmt(cartTotal()), go: () => push("cart") });
       return rows;
     }
@@ -697,7 +697,7 @@ function drawLCD(){
   L.fillStyle = AMBER; L.strokeStyle = AMBER; L.textBaseline = "middle";
 
   // header
-  const titles = { main: STORE.artist, beats: "All beats", beat: "Beat", cart: "Your cart", game: "Sygnal", now: "Now playing", text: s.title };
+  const titles = { main: STORE.artist, beats: "Beats", beat: "Beat", cart: "Cart", game: "Sygnal", now: "Now playing", text: s.title };
   L.font = '700 28px "Pixelify Sans", monospace'; L.textAlign = "center"; L.fillText(titles[s.id] || "", 320, 30);
   if (audio.playing >= 0){ L.beginPath(); L.moveTo(24, 20); L.lineTo(42, 30); L.lineTo(24, 40); L.fill(); }
   L.lineWidth = 2; L.strokeRect(574, 20, 40, 20); L.fillRect(615, 26, 4, 8); L.fillRect(578, 24, 26, 12);
@@ -1093,9 +1093,9 @@ function syncCard(force){
     box.appendChild(el);
   };
   const added = inCart(i);
-  tile(0, b.sold ? "Lease" : added ? "In cart (remove)" : "Add lease to cart", b.sold ? "Sold" : fmt(STORE.leasePrice), b.sold ? "No longer available" : added ? "Tap to remove" : "MP3 + WAV, non-exclusive", () => toggleCart(i), b.sold);
-  tile(1, "Exclusive rights", b.sold ? "Sold" : "Make offer", b.sold ? "Taken" : "Own it outright", () => askExclusive(i), b.sold);
-  tile(2, cart.length ? `Checkout (${cart.length} beat${cart.length > 1 ? "s" : ""})` : `Deal: ${DEAL.count} for ${fmt(DEAL.price)}`, cart.length ? fmt(cartTotal()) : "Cart empty", cart.length ? dealHint() : "Add beats to start", () => cart.length ? checkout() : toast(`Add beats to your cart. ${dealHint()}.`), false);
+  tile(0, added ? "In cart" : "Lease", b.sold ? "Sold" : fmt(STORE.leasePrice), b.sold ? "No longer available" : added ? "Tap to remove" : "Tap to add", () => toggleCart(i), b.sold);
+  tile(1, "Exclusive", b.sold ? "Sold" : "Contact", b.sold ? "Taken" : "Make an offer", () => askExclusive(i), b.sold);
+  tile(2, `Cart (${cart.length})`, cart.length ? fmt(cartTotal()) : "Empty", cart.length ? `Checkout. ${dealHint()}` : dealHint(), () => cart.length ? checkout() : toast(`Add beats to your cart. ${dealHint()}.`), false);
 }
 $("#cardPlay").addEventListener("click", () => toggle(cardBeat));
 
@@ -1294,10 +1294,10 @@ function press(mesh){ mesh.position.z = mesh.userData.z0 - 0.02; setTimeout(() =
 function setLockUI(){
   const on = mode !== "free";
   $("#lockBtn").classList.toggle("on", on);
-  $("#lockBtn span").textContent = on ? "Spin it" : "Use the player";
+  $("#lockBtn span").textContent = on ? "Locked in. Release" : "Lock in";
   canvas.classList.toggle("locked", on);
-  $("#hint").textContent = on ? "Turn the wheel to scroll. Press the center to choose."
-                              : "Tap the player to start browsing beats.";
+  $("#hint").textContent = on ? "Turn the knob to scroll. Press the center to select."
+                              : "Tap the pod to lock in. Drag to spin it.";
 }
 function lockIn(){ if (mode !== "free") return; mode = "locking"; vel.x = vel.y = 0; setLockUI(); }
 function release(kick = true){ mode = "free"; userSpun = false; lastInput = performance.now(); if (kick) vel.y = 0.03; setLockUI(); }
@@ -1315,7 +1315,7 @@ function applyTheme(dark){
       if (i === 2) m.color.set(WHEEL_DARK).convertSRGBToLinear();
     }
   });
-  $("#themeBtn span").textContent = dark ? "Light mode" : "Dark mode";
+  $("#themeBtn span").textContent = dark ? "Light" : "Dark";
   $("#themeBtn").setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
   try { localStorage.setItem("pria-theme", dark ? "dark" : "light"); } catch(e) {}
 }
